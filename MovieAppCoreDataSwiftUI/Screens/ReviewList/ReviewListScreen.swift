@@ -17,17 +17,20 @@ struct ReviewListScreen: View {
     
     var body: some View {
         VStack {
-            List(viewModel.reviews, id: \.reviewId) { review in
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(review.title)
-                        Text(review.text)
-                            .font(.caption)
-                        
-                    }
-                    Spacer()
-                    if let date = review.publishedDate {
-                        Text(DateFormatterHelper.formattedString(from: date))
+            List {
+                Section(header: Text("Reviews")) {
+                    ForEach(viewModel.reviews, id: \.reviewId) { review in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(review.title)
+                                Text(review.text)
+                                    .font(.caption)
+                            }
+                            Spacer()
+                            if let date = review.publishedDate {
+                                Text(DateFormatterHelper.formattedString(from: date))
+                            }
+                        }
                     }
                 }
             }
