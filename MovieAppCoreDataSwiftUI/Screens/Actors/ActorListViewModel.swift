@@ -20,7 +20,7 @@ struct ActorViewModel {
     }
     
     var movies: [MovieViewModel] {
-        Movie.getAllMoviesForActorWith(name: name).map { MovieViewModel(movie: $0) }
+        Movie.getMoviesForActorWith(name: name).map { MovieViewModel(movie: $0) }
     }
 }
 

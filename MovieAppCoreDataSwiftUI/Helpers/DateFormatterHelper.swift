@@ -17,9 +17,8 @@ final class DateFormatterHelper {
     static func formattedString(from date: Date) -> String {
         return formatter.string(from: date)
     }
+    
+    static func dateFrom(string: String) -> Date? {
+        return formatter.date(from: string)
+    }
 }
-//func asFormattedString() -> String {
-//    let formatter = DateFormatter()
-//    formatter.dateFormat = "MM/dd/yyyy"
-//    return formatter.string(from: self)
-//}

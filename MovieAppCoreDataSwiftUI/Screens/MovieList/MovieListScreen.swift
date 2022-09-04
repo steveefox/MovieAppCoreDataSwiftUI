@@ -7,10 +7,23 @@
 
 import SwiftUI
 
+enum Sheets: Identifiable {
+    
+    var id: UUID {
+        return UUID()
+    }
+    
+    case addMovie
+    case showFilters
+}
+
 struct MovieListScreen: View {
     @StateObject private var viewModel: MovieListViewModel = MovieListViewModel()
     
     @State private var isPresented: Bool = false
+    @State private var activeSheet: Sheets?
+    @State private var filterApplied: Bool = false
+    
     
     private func deleteMovie(at indexSet: IndexSet) {
         indexSet.forEach { index in
@@ -22,28 +35,82 @@ struct MovieListScreen: View {
     }
     
     var body: some View {
-        List {
-            ForEach(viewModel.movies, id: \.id) { movie in
-                NavigationLink(destination: MovieDetailScreen(movie: movie)) {
-                    MovieCell(movie: movie)
+        VStack {
+            HStack {
+                Button("Reset") {
+                    viewModel.getAllMovies()
+                }.padding()
+                Button("Sort") {
+                    viewModel.sortEnabled = true
                 }
+                Spacer()
+                Button("Filter") {
+                    filterApplied = true
+                    activeSheet = .showFilters
+                }
+            }.padding(.trailing, 40)
+            
+            List {
                 
-            }.onDelete(perform: deleteMovie(at:))
-        }.listStyle(PlainListStyle())
-        .navigationTitle("Movies")
-        .navigationBarItems(trailing: Button("Add Movie") {
-            isPresented = true
+                ForEach(viewModel.movies, id: \.id) { movie in
+                    NavigationLink(
+                        destination: MovieDetailScreen(movie: movie),
+                        label: {
+                            MovieCell(movie: movie)
+                        })
+                }.onDelete(perform: deleteMovie)
+                
+            }.listStyle(PlainListStyle())
+            
+            .navigationTitle("Movies")
+            .navigationBarItems(trailing: Button("Add Movie") {
+                activeSheet = .addMovie
+            })
+            .sheet(item: $activeSheet, onDismiss: {
+                
+            }, content: { item in
+                switch item {
+                    case .addMovie:
+                        AddMovieScreen()
+                    case .showFilters:
+                    ShowFiltersScreen(movies: $viewModel.movies)
+                }
+            })
+            .onAppear(perform: {
+                UITableView.appearance().separatorStyle = .none
+                UITableView.appearance().separatorColor = .clear
+                viewModel.getAllMovies()
         })
-        .sheet(isPresented: $isPresented, onDismiss: {
-            viewModel.getAllMovies()
-        },  content: {
-            AddMovieScreen()
-        })
-        .embedInNavigationView()
-        
-        .onAppear(perform: {
-            viewModel.getAllMovies()
-        })
+            if viewModel.sortEnabled {
+                GeometryReader { geometry in
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Picker("Select title", selection: $viewModel.selectedSortOption) {
+                                ForEach(SortOptions.allCases, id: \.self) {
+                                    Text($0.displayText)
+                                }
+                            }.frame(width: geometry.size.width/3, height: 100)
+                                .clipped()
+                            
+                            Picker("Sort Direction", selection: $viewModel.selectedSortDirection) {
+                                ForEach(SortDirection.allCases, id: \.self) {
+                                    Text($0.displayText)
+                                }
+                            }.frame(width: geometry.size.width/3, height: 100)
+                                .clipped()
+                            
+                            Spacer()
+                        }
+                        Button("Done") {
+                            viewModel.sortEnabled = false
+                            viewModel.sort()
+                        }
+                    }
+                }
+            }
+            
+        }.embedInNavigationView()
     }
 }
 
@@ -68,6 +135,9 @@ struct MovieCell: View {
                 Text(movie.director)
                     .font(.callout)
                     .opacity(0.5)
+                Text(movie.releaseDate ?? "")
+                    .font(.callout)
+                    .opacity(0.8)
                 Spacer()
                 
             }
